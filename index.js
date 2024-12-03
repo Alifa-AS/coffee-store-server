@@ -10,9 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 
-//coffeeMaster
-//6RQCrg0iQOY9t6Hw
-
 // console.log(process.env.DB_USER)
 // console.log(process.env.DB_PASS)
 
@@ -35,7 +32,8 @@ async function run() {
 
     const coffeeCollection = client.db('coffeeDB').collection('coffee');
 
-   
+    const userCollection = client.db('coffeeDB').collection('users')
+
     app.get('/coffee', async(req, res)=>{
       const cursor = coffeeCollection.find();
       const result = await cursor.toArray();
@@ -85,6 +83,47 @@ async function run() {
     const result = await coffeeCollection.deleteOne(query);
     res.send(result);
   })
+
+     //users related apis
+     app.get('/users', async(req,res) => {
+      const cursor = userCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+     })
+
+    // users related api
+    app.post('/users', async(req,res) => {
+      const newUser = req.body;
+      console.log('creating new user' ,newUser);
+      const result = await userCollection.insertOne(newUser);
+      res.send(result)
+    })
+
+    app.patch('/users', async(req,res)=>{
+
+        const email = req.body.email;
+        console.log("Received Email for Update:", email);
+        const filter = { email };
+        const updatedDoc = {
+          $set: {
+            lastSignInTime: req.body?.lastSignInTime,
+          }
+        }
+
+        const result = await userCollection.updateOne(filter, updatedDoc);
+          console.log("Update Result:", result);
+        res.send(result);
+    })
+  
+    
+
+     app.delete('/users/:id', async(req,res)=>{
+      const id =req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await userCollection.deleteOne(query)
+      res.send(result);
+     })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
